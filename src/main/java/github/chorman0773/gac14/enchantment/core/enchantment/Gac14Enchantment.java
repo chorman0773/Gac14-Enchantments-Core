@@ -164,8 +164,18 @@ public class Gac14Enchantment extends Enchantment {
 			return this;
 		}
 		
+		public Builder asTreasureEnchantment() {
+			this.treasure = true;
+			return this;
+		}
+		
+		public Builder asCurse() {
+			this.curse = true;
+			return this;
+		}
+		
 		public Gac14Enchantment build() {
-			return new Gac14Enchantment(rarity, type, slots.stream().toArray(EntityEquipmentSlot[]::new), checkApply, checkApply, checkApplyWith, entityAttacked, entityAttacked, maxLevel, curse, curse, displayName, name, incomingFunc, incomingFunc, equipFunc, equipFunc, equipFunc);
+			return new Gac14Enchantment(rarity, type, slots.stream().toArray(EntityEquipmentSlot[]::new), checkApply, checkApply, checkApplyWith, entityAttacked, entityAttacked, maxLevel, treasure, curse, displayName, name, incomingFunc, incomingFunc, equipFunc, equipFunc, equipFunc);
 		}
 		
 	}
@@ -277,8 +287,6 @@ public class Gac14Enchantment extends Enchantment {
 	public double getIncomingDamageModifier(DamageSource src,Entity target,int level) {
 		return incomingMod.apply(src, target, level);
 	}
-	
-	
 	
 
 }
