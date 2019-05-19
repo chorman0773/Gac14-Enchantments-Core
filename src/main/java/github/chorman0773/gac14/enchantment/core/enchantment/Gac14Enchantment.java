@@ -2,6 +2,7 @@ package github.chorman0773.gac14.enchantment.core.enchantment;
 
 import java.util.EnumSet;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import com.google.common.base.Predicates;
@@ -35,6 +36,30 @@ public class Gac14Enchantment extends Enchantment {
 	private BiConsumer<ItemStack,EntityLivingBase> unequipFunc;
 	private BiConsumer<ItemStack,EntityLivingBase> tickFunc;
 	
+	
+	private static BiConsumer<ResourceLocation,Gac14Enchantment> lateRegisterFunc = (r,e)->{
+		throw new UnsupportedOperationException("No provider for lateRegister found");
+	};
+	
+	private static BiConsumer<ResourceLocation,Gac14Enchantment> reregisterFunc = (r,e)->{
+		throw new UnsupportedOperationException("No provider for reregister found");
+	};
+	
+	public static void lateRegister(Gac14Enchantment e) {
+		lateRegisterFunc.accept(e.getRegistryName(), e);
+	}
+	
+	public static void reregister(Gac14Enchantment e) {
+		reregisterFunc.accept(e.getRegistryName(), e);
+	}
+	
+	public static void addLateRegisterProvider(BiConsumer<ResourceLocation,Gac14Enchantment> func) {
+		lateRegisterFunc = func;
+	}
+	
+	public static void addReregisterProvider(BiConsumer<ResourceLocation,Gac14Enchantment> func) {
+		reregisterFunc = func;
+	}
 	
 	
 	protected Gac14Enchantment(Rarity rarityIn, EnumEnchantmentType typeIn, EntityEquipmentSlot[] slots,Predicate<ItemStack> checkApply,Predicate<ItemStack> checkEnchant,Predicate<Enchantment> checkApplyWith, EnchantmentAttackConsumer entityAttacked,EnchantmentAttackConsumer userAttacked,int maxLevel,boolean treasure,boolean curse,ITextComponent unName,ResourceLocation name,DamageModifierFunction incomingFunc,DamageModifierFunction outgoingFunc,BiConsumer<ItemStack,EntityLivingBase> equipFunc,BiConsumer<ItemStack,EntityLivingBase> unequipFunc,BiConsumer<ItemStack,EntityLivingBase> tickFunc) {
