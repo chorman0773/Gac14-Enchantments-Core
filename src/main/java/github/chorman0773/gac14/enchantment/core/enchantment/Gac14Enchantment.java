@@ -2,6 +2,7 @@ package github.chorman0773.gac14.enchantment.core.enchantment;
 
 import java.util.EnumSet;
 import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -15,6 +16,8 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -36,6 +39,27 @@ public class Gac14Enchantment extends Enchantment {
 	private BiConsumer<ItemStack,EntityLivingBase> unequipFunc;
 	private BiConsumer<ItemStack,EntityLivingBase> tickFunc;
 	
+	private static BiPredicate<ResourceLocation,EntityLivingBase> checkFirstTriggerFunc = (r,e)->true;
+	
+	public static void setFirstTriggerProvider(BiPredicate<ResourceLocation,EntityLivingBase> provider) {
+		checkFirstTriggerFunc = provider;
+	}
+	
+	public static boolean isFirstTrigger(ResourceLocation name,EntityLivingBase on) {
+		return checkFirstTriggerFunc.test(name,on);
+	}
+	
+	public static int getEnchantmentLevel(ItemStack stack,String name) {
+		NBTTagList ench = stack.getEnchantmentTagList();
+		for(int i = 0;i<ench.size();i++) {
+			NBTTagCompound comp = ench.getCompound(i);
+			if(comp.getString("Id").equals(name))
+				return comp.getInt("Lvl");
+				
+			
+		}
+		return -1;
+	}
 	
 	private static BiConsumer<ResourceLocation,Gac14Enchantment> lateRegisterFunc = (r,e)->{
 		throw new UnsupportedOperationException("No provider for lateRegister found");
