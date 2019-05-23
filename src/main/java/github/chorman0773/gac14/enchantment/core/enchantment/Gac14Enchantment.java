@@ -329,11 +329,11 @@ public class Gac14Enchantment extends Enchantment {
 		return true;
 	}
 	
-	public double getOutgoingDamageModifier(DamageSource src,Entity target, int level) {
+	public double getOutgoingDamageModifier(DamageSource src,Entity target, ItemStack level) {
 		return outgoingMod.apply(src, target, level);
 	}
 	
-	public double getIncomingDamageModifier(DamageSource src,Entity target,int level) {
+	public double getIncomingDamageModifier(DamageSource src,Entity target,ItemStack level) {
 		return incomingMod.apply(src, target, level);
 	}
 	

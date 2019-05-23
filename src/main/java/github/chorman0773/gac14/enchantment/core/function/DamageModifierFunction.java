@@ -4,11 +4,12 @@ import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 
 @FunctionalInterface
 public interface DamageModifierFunction {
-	public double apply(DamageSource src,Entity target,int level);
+	public double apply(DamageSource src,Entity target,ItemStack stack);
 	
 	public default DamageModifierFunction andThen(DoubleUnaryOperator op) {
 		return (s,t,l)->op.applyAsDouble(DamageModifierFunction.this.apply(s, t, l));
