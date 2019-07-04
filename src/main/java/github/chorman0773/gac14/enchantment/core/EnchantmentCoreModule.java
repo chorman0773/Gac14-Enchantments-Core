@@ -10,7 +10,7 @@ public class EnchantmentCoreModule extends Gac14Module<EnchantmentCoreModule> {
 		// TODO Auto-generated constructor stub
 	}
 	
-	private static final ResourceLocation MODULE_NAME = ResourceLocation.makeResourceLocation("gac14:enchantment/core");
+	private static final ResourceLocation MODULE_NAME = new ResourceLocation("gac14:enchantment/core");
 	private static final Version MODULE_VERSION = new Version("1.0");
 
 	@Override

@@ -1,23 +1,21 @@
 package github.chorman0773.gac14.enchantment.core.enchantment;
 
 import java.util.EnumSet;
+import java.util.Random;
 import java.util.function.BiConsumer;
-import java.util.function.BiPredicate;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import com.google.common.base.Predicates;
 
 import github.chorman0773.gac14.enchantment.core.function.DamageModifierFunction;
 import github.chorman0773.gac14.enchantment.core.function.EnchantmentAttackConsumer;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnumEnchantmentType;
+import net.minecraft.enchantment.EnchantmentType;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -35,58 +33,34 @@ public class Gac14Enchantment extends Enchantment {
 	private ITextComponent displayName;
 	private DamageModifierFunction outgoingMod;
 	private DamageModifierFunction incomingMod;
-	private BiConsumer<ItemStack,EntityLivingBase> equipFunc;
-	private BiConsumer<ItemStack,EntityLivingBase> unequipFunc;
-	private BiConsumer<ItemStack,EntityLivingBase> tickFunc;
+	private BiConsumer<ItemStack,LivingEntity> equipFunc;
+	private BiConsumer<ItemStack,LivingEntity> unequipFunc;
+	private BiConsumer<ItemStack,LivingEntity> tickFunc;
 	
-	private static BiPredicate<ResourceLocation,EntityLivingBase> checkFirstTriggerFunc = (r,e)->true;
+	private static EnchantmentSpi provider;
 	
-	public static void setFirstTriggerProvider(BiPredicate<ResourceLocation,EntityLivingBase> provider) {
-		checkFirstTriggerFunc = provider;
+	
+	
+	public static boolean isFirstTrigger(ResourceLocation name,LivingEntity on) {
+		return provider.isFirstTrigger(name,on);
 	}
 	
-	public static boolean isFirstTrigger(ResourceLocation name,EntityLivingBase on) {
-		return checkFirstTriggerFunc.test(name,on);
+	public static int getEnchantmentLevel(ItemStack stack,Gac14Enchantment ench) {
+		return provider.getEnchantmentLevel(stack, ench);
 	}
 	
-	public static int getEnchantmentLevel(ItemStack stack,String name) {
-		NBTTagList ench = stack.getEnchantmentTagList();
-		for(int i = 0;i<ench.size();i++) {
-			NBTTagCompound comp = ench.getCompound(i);
-			if(comp.getString("Id").equals(name))
-				return comp.getInt("Lvl");
-				
-			
-		}
-		return -1;
-	}
 	
-	private static BiConsumer<ResourceLocation,Gac14Enchantment> lateRegisterFunc = (r,e)->{
-		throw new UnsupportedOperationException("No provider for lateRegister found");
-	};
-	
-	private static BiConsumer<ResourceLocation,Gac14Enchantment> reregisterFunc = (r,e)->{
-		throw new UnsupportedOperationException("No provider for reregister found");
-	};
-	
-	public static void lateRegister(Gac14Enchantment e) {
-		lateRegisterFunc.accept(e.getRegistryName(), e);
-	}
 	
 	public static void reregister(Gac14Enchantment e) {
-		reregisterFunc.accept(e.getRegistryName(), e);
+		provider.reregister(e.getRegistryName(), e);
 	}
 	
-	public static void addLateRegisterProvider(BiConsumer<ResourceLocation,Gac14Enchantment> func) {
-		lateRegisterFunc = func;
-	}
-	
-	public static void addReregisterProvider(BiConsumer<ResourceLocation,Gac14Enchantment> func) {
-		reregisterFunc = func;
+	public static void lateRegister(Gac14Enchantment e) {
+		provider.lateRegister(e.getRegistryName(), e);
 	}
 	
 	
-	protected Gac14Enchantment(Rarity rarityIn, EnumEnchantmentType typeIn, EntityEquipmentSlot[] slots,Predicate<ItemStack> checkApply,Predicate<ItemStack> checkEnchant,Predicate<Enchantment> checkApplyWith, EnchantmentAttackConsumer entityAttacked,EnchantmentAttackConsumer userAttacked,int maxLevel,boolean treasure,boolean curse,ITextComponent unName,ResourceLocation name,DamageModifierFunction incomingFunc,DamageModifierFunction outgoingFunc,BiConsumer<ItemStack,EntityLivingBase> equipFunc,BiConsumer<ItemStack,EntityLivingBase> unequipFunc,BiConsumer<ItemStack,EntityLivingBase> tickFunc) {
+	protected Gac14Enchantment(Rarity rarityIn, EnchantmentType typeIn, EquipmentSlotType[] slots,Predicate<ItemStack> checkApply,Predicate<ItemStack> checkEnchant,Predicate<Enchantment> checkApplyWith, EnchantmentAttackConsumer entityAttacked,EnchantmentAttackConsumer userAttacked,int maxLevel,boolean treasure,boolean curse,ITextComponent unName,ResourceLocation name,DamageModifierFunction incomingFunc,DamageModifierFunction outgoingFunc,BiConsumer<ItemStack,LivingEntity> equipFunc,BiConsumer<ItemStack,LivingEntity> unequipFunc,BiConsumer<ItemStack,LivingEntity> tickFunc) {
 		super(rarityIn, typeIn, slots);
 		this.checkApply = checkApply;
 		this.checkEnchant = checkEnchant;
@@ -118,16 +92,16 @@ public class Gac14Enchantment extends Enchantment {
 		private EnchantmentAttackConsumer userAttacked = EnchantmentAttackConsumer.nop();
 		private ITextComponent displayName;
 		private ResourceLocation name;
-		private EnumSet<EntityEquipmentSlot> slots = EnumSet.noneOf(EntityEquipmentSlot.class);
+		private EnumSet<EquipmentSlotType> slots = EnumSet.noneOf(EquipmentSlotType.class);
 		private Rarity rarity = Rarity.COMMON;
-		private EnumEnchantmentType type = EnumEnchantmentType.ALL;
+		private EnchantmentType type = EnchantmentType.ALL;
 		
 		private DamageModifierFunction outgoingFunc = DamageModifierFunction.one();
 		private DamageModifierFunction incomingFunc = DamageModifierFunction.one();
 		
-		private BiConsumer<ItemStack,EntityLivingBase> equipFunc = (t,u)->{};
-		private BiConsumer<ItemStack,EntityLivingBase> unequipFunc = (t,u)->{};
-		private BiConsumer<ItemStack,EntityLivingBase> tickFunc = (t,u)->{};
+		private BiConsumer<ItemStack,LivingEntity> equipFunc = (t,u)->{};
+		private BiConsumer<ItemStack,LivingEntity> unequipFunc = (t,u)->{};
+		private BiConsumer<ItemStack,LivingEntity> tickFunc = (t,u)->{};
 		
 		public static Builder create() {
 			return new Builder();
@@ -173,7 +147,7 @@ public class Gac14Enchantment extends Enchantment {
 			return this;
 		}
 		
-		public Builder withEffectiveSlots(EnumSet<EntityEquipmentSlot> slots) {
+		public Builder withEffectiveSlots(EnumSet<EquipmentSlotType> slots) {
 			this.slots = slots;
 			return this;
 		}
@@ -183,7 +157,7 @@ public class Gac14Enchantment extends Enchantment {
 			return this;
 		}
 		
-		public Builder withType(EnumEnchantmentType type) {
+		public Builder withType(EnchantmentType type) {
 			this.type = type;
 			return this;
 		}
@@ -198,17 +172,17 @@ public class Gac14Enchantment extends Enchantment {
 			return this;
 		}
 		
-		public Builder withEquipAction(BiConsumer<ItemStack,EntityLivingBase> consumer) {
+		public Builder withEquipAction(BiConsumer<ItemStack,LivingEntity> consumer) {
 			this.equipFunc = equipFunc.andThen(consumer);
 			return this;
 		}
 		
-		public Builder withUnequipAction(BiConsumer<ItemStack,EntityLivingBase> consumer) {
+		public Builder withUnequipAction(BiConsumer<ItemStack,LivingEntity> consumer) {
 			this.unequipFunc = unequipFunc.andThen(consumer);
 			return this;
 		}
 		
-		public Builder withTickAction(BiConsumer<ItemStack,EntityLivingBase> consumer) {
+		public Builder withTickAction(BiConsumer<ItemStack,LivingEntity> consumer) {
 			this.tickFunc = tickFunc.andThen(consumer);
 			return this;
 		}
@@ -224,11 +198,15 @@ public class Gac14Enchantment extends Enchantment {
 		}
 		
 		public Gac14Enchantment build() {
-			return new Gac14Enchantment(rarity, type, slots.stream().toArray(EntityEquipmentSlot[]::new), checkApply, checkApply, checkApplyWith, entityAttacked, entityAttacked, maxLevel, treasure, curse, displayName, name, incomingFunc, incomingFunc, equipFunc, equipFunc, equipFunc);
+			return new Gac14Enchantment(rarity, type, slots.stream().toArray(EquipmentSlotType[]::new), checkApply, checkApply, checkApplyWith, entityAttacked, entityAttacked, maxLevel, treasure, curse, displayName, name, incomingFunc, incomingFunc, equipFunc, equipFunc, equipFunc);
 		}
 		
 	}
-
+	
+	public static Stream<Enchantment> getEnchantmentsOnItem(ItemStack s){
+		return provider.getEnchantmentsOnItem(s);
+	}
+	
 
 
 	@Override
@@ -261,7 +239,7 @@ public class Gac14Enchantment extends Enchantment {
 	@Override
 	public boolean canApply(ItemStack stack) {
 		// TODO Auto-generated method stub
-		return checkApply.test(stack);
+		return checkApply.test(stack)&&super.canApply(stack);
 	}
 
 
@@ -273,27 +251,25 @@ public class Gac14Enchantment extends Enchantment {
 	}
 
 	
-	public void onItemEquipped(ItemStack stack,EntityLivingBase user) {
+	public void onItemEquipped(ItemStack stack,LivingEntity user) {
 		this.equipFunc.accept(stack,user);
 	}
 	
-	public void onItemUnequipped(ItemStack stack,EntityLivingBase user) {
+	public void onItemUnequipped(ItemStack stack,LivingEntity user) {
 		this.unequipFunc.accept(stack, user);
 	}
 	
-	public void onUpdate(ItemStack stack,EntityLivingBase user) {
+	public void onUpdate(ItemStack stack,LivingEntity user) {
 		this.tickFunc.accept(stack, user);
 	}
 
-	@Override
-	public void onEntityDamaged(EntityLivingBase user, Entity target, int level) {
+	public void onEntityDamaged(LivingEntity user, Entity target, ItemStack level) {
 		entityAttacked.accept(user, target, level);
 	}
 
 
 
-	@Override
-	public void onUserHurt(EntityLivingBase user, Entity attacker, int level) {
+	public void onUserHurt(LivingEntity user, Entity attacker, ItemStack level) {
 		userAttacked.accept(user, attacker, level);
 	}
 
@@ -335,6 +311,31 @@ public class Gac14Enchantment extends Enchantment {
 	
 	public double getIncomingDamageModifier(DamageSource src,Entity target,ItemStack level) {
 		return incomingMod.apply(src, target, level);
+	}
+	
+	
+	
+	
+	public static void applyToItem(Enchantment ench,ItemStack stack,int level) {
+		provider.applyToItem(ench, stack,level);
+	}
+	
+	public static boolean enchantmentExists(ResourceLocation loc) {
+		return provider.hasEnchantment(loc);
+	}
+	
+	public static Enchantment getEnchantment(ResourceLocation loc) {
+		return provider.getEnchantment(loc);
+	}
+	
+	public static void applyRandomToItem(Stream<Enchantment> stream, ItemStack stack,Random rand) {
+		Enchantment ench = stream
+				.filter(e->e.canApply(stack))
+				.parallel()
+				.sequential()
+				.reduce((e1,e2)->rand.nextBoolean()?e1:e2)
+				.orElseThrow(RuntimeException::new);
+		applyToItem(ench,stack,rand.nextInt(ench.getMaxLevel()));
 	}
 	
 
