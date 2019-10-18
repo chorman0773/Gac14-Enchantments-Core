@@ -39,7 +39,9 @@ public class Gac14Enchantment extends Enchantment {
 	
 	private static EnchantmentSpi provider;
 	
-	
+	public static void setEnchantmentProvider(EnchantmentSpi ench) {
+		provider = ench;
+	}
 	
 	public static boolean isFirstTrigger(ResourceLocation name,LivingEntity on) {
 		return provider.isFirstTrigger(name,on);
